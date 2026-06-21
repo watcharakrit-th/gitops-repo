@@ -1,0 +1,35 @@
+# Lets the jenkins ServiceAccount create and manage build-agent Pods for the
+# Kubernetes-plugin Cloud config (casc.yaml: jenkins.clouds.kubernetes).
+# Scoped to the jenkins namespace only — no cluster-wide pod access.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: jenkins-agent-pods
+  namespace: jenkins
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jenkins-agent-pods
+  namespace: jenkins
+subjects:
+  - kind: ServiceAccount
+    name: jenkins
+    namespace: jenkins
+roleRef:
+  kind: Role
+  name: jenkins-agent-pods
+  apiGroup: rbac.authorization.k8s.io

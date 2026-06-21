@@ -1,0 +1,12 @@
+# Replaces the named volume `jenkins_home` from docker-compose.yaml.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jenkins-home
+  namespace: jenkins
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

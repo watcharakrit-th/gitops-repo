@@ -1,0 +1,20 @@
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultConnection
+metadata:
+  name: vault-connection
+  namespace: jenkins
+spec:
+  address: "http://vault.vault-demo.svc.cluster.local:8200"
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: vault-auth
+  namespace: jenkins
+spec:
+  vaultConnectionRef: vault-connection
+  method: kubernetes
+  mount: kubernetes
+  kubernetes:
+    role: jenkins
+    serviceAccount: jenkins

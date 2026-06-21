@@ -1,0 +1,140 @@
+# Default-deny, then allow: DNS, Vault, talking to sonarqube, and — unlike
+# the other two namespaces — general internet egress on 80/443. Jenkins
+# pipelines (see jenkins/JenkinsFile) clone from GitHub and pull dependencies
+# from Maven Central, so blocking outbound internet here would break the
+# thing Jenkins actually exists to do. The ipBlock excludes the cluster's
+# own pod/service CIDRs so this doesn't double as a blanket allow-all for
+# in-cluster traffic. See k8s/vault-demo/02-networkpolicy.yaml for the CNI
+# caveat (kindnet does not enforce NetworkPolicy on this lab cluster).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: jenkins
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-egress
+  namespace: jenkins
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-vault-egress
+  namespace: jenkins
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 172.18.0.200/32
+      ports:
+        - protocol: TCP
+          port: 8200
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-sonarqube-egress
+  namespace: jenkins
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: sonarqube
+      ports:
+        - protocol: TCP
+          port: 9000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-internet-egress
+  namespace: jenkins
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.244.0.0/16 # cluster pod CIDR
+              - 10.96.0.0/12 # cluster service CIDR
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+---
+# The jenkins controller needs to reach the Kubernetes API server to create
+# the build-agent Pods defined by the Kubernetes Cloud in casc.yaml. The API
+# server's ClusterIP falls inside the service CIDR, which allow-internet-egress
+# above deliberately excludes — so it needs its own narrow allow. 10.96.0.1
+# is this kind cluster's `kubernetes.default.svc` ClusterIP (verify with
+# `kubectl get svc kubernetes -n default` if the cluster is ever rebuilt).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-k8s-api-egress
+  namespace: jenkins
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 10.96.0.1/32
+      ports:
+        - protocol: TCP
+          port: 443
+---
+# default-deny-all blocks Ingress too, with nothing here to re-allow it.
+# Build-agent Pods connect back to the controller's JNLP port (50000) to
+# register as an agent (see jenkinsTunnel in casc.yaml) — without this, that
+# connection is dropped and agent Pods never come online.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-jnlp-ingress
+  namespace: jenkins
+spec:
+  podSelector:
+    matchLabels:
+      app: jenkins
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 50000

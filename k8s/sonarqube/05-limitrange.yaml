@@ -1,0 +1,22 @@
+# Max is sized generously: SonarQube's embedded Elasticsearch + web + compute
+# engine processes commonly need 2-4GiB to boot reliably.
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: default-limits
+  namespace: sonarqube
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: "200m"
+        memory: "128Mi"
+      defaultRequest:
+        cpu: "50m"
+        memory: "64Mi"
+      max:
+        cpu: "2"
+        memory: "4Gi"
+      min:
+        cpu: "10m"
+        memory: "16Mi"

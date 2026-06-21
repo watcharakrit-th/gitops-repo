@@ -1,0 +1,24 @@
+# Safety net for any container that forgets resources, plus a max ceiling
+# sized for the postgres container's own explicit limits (see
+# 07-deployment.yaml) — LimitRange.max bounds every container in the
+# namespace, including ones that already set their own resources.
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: default-limits
+  namespace: postgres
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: "200m"
+        memory: "128Mi"
+      defaultRequest:
+        cpu: "50m"
+        memory: "64Mi"
+      max:
+        cpu: "1"
+        memory: "1Gi"
+      min:
+        cpu: "10m"
+        memory: "16Mi"

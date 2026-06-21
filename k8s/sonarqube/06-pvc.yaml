@@ -1,0 +1,37 @@
+# Replaces the three named volumes from docker-compose.yaml: sonarqube_data,
+# sonarqube_extensions, sonarqube_logs.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sonarqube-data
+  namespace: sonarqube
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sonarqube-extensions
+  namespace: sonarqube
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sonarqube-logs
+  namespace: sonarqube
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

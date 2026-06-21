@@ -1,0 +1,106 @@
+# NOTE on what changed vs. docker-compose.yaml:
+#   - No /var/run/docker.sock mount. That bind-mount granted the Jenkins
+#     container root-equivalent control of the host Docker daemon, which
+#     has no safe equivalent in this hardened (restricted-PSA) cluster and
+#     wasn't actually used by jenkins/JenkinsFile (no `docker` calls in the
+#     pipeline). If pipelines need to build images later, use an
+#     in-cluster builder (Kaniko, buildah) or a Jenkins agent pod template
+#     instead of re-introducing host Docker socket access.
+#   - No sonar-token-init dependency. The SonarQube token now comes from
+#     Vault via VSO (see 04-vault-static-secret.yaml) instead of a shared
+#     file written by a short-lived init container.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins
+  namespace: jenkins
+  labels:
+    app: jenkins
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: jenkins
+  template:
+    metadata:
+      labels:
+        app: jenkins
+    spec:
+      serviceAccountName: jenkins
+      securityContext:
+        runAsNonRoot: true
+        # Matches the jenkins/jenkins image's built-in `jenkins` user.
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: jenkins
+          image: custom-jenkins:lts
+          # Built locally from ./jenkins/Dockerfile and loaded into every
+          # kind node with `kind load docker-image custom-jenkins:lts
+          # --name lab` — there is no registry hosting this image.
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SONAR_SERVER_URL
+              value: "http://sonarqube.sonarqube.svc.cluster.local:9000"
+            - name: JENKINS_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: jenkins-admin
+                  key: JENKINS_ADMIN_PASSWORD
+            - name: SONAR_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: jenkins-sonar
+                  key: token
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: agent
+              containerPort: 50000
+          startupProbe:
+            httpGet:
+              path: /login
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /login
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /login
+              port: 8080
+            periodSeconds: 15
+            failureThreshold: 5
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            privileged: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+          volumeMounts:
+            - name: jenkins-home
+              mountPath: /var/jenkins_home
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: jenkins-home
+          persistentVolumeClaim:
+            claimName: jenkins-home
+        - name: tmp
+          emptyDir: {}

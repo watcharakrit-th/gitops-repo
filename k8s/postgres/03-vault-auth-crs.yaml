@@ -1,0 +1,23 @@
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultConnection
+metadata:
+  name: vault-connection
+  namespace: postgres
+spec:
+  # Same Vault instance vault-demo already wired up — reused via its Service
+  # DNS name instead of re-creating the headless Service/Endpoints pointing
+  # at the static 172.18.0.200 IP in every namespace.
+  address: "http://vault.vault-demo.svc.cluster.local:8200"
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: vault-auth
+  namespace: postgres
+spec:
+  vaultConnectionRef: vault-connection
+  method: kubernetes
+  mount: kubernetes
+  kubernetes:
+    role: postgres
+    serviceAccount: postgres
