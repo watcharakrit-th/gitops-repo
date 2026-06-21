@@ -9,8 +9,9 @@ spec:
     repoURL: https://github.com/watcharakrit-th/gitops-repo.git
     targetRevision: main
     path: dev
-    # directory:
-    #   recurse: true
+    directory:
+      recurse: true
+      exclude: "k8s/audit-policy.yaml"
   destination:
     server: https://kubernetes.default.svc
     namespace: dev
