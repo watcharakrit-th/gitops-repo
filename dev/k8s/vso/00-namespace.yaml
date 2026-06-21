@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vault-demo
+  labels:
+    # Pod Security Admission — reject anything that doesn't meet the
+    # "restricted" profile (non-root, no extra caps, seccomp required, etc.)
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
