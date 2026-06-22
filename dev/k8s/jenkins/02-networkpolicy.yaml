@@ -120,7 +120,12 @@ spec:
 # default-deny-all blocks Ingress too, with nothing here to re-allow it.
 # Build-agent Pods connect back to the controller's JNLP port (50000) to
 # register as an agent (see jenkinsTunnel in casc.yaml) — without this, that
-# connection is dropped and agent Pods never come online.
+# connection is dropped and agent Pods never come online. Two source peers:
+# the "maven" pod template's agents (same namespace) and the "kaniko" pod
+# template's agents, which live in jenkins-builds (see
+# k8s/jenkins-builds/02-networkpolicy.yaml's allow-jnlp-egress for the other
+# half of this rule) because that namespace runs at baseline PSA, not
+# restricted.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -135,6 +140,9 @@ spec:
   ingress:
     - from:
         - podSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: jenkins-builds
       ports:
         - protocol: TCP
           port: 50000
