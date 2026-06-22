@@ -1,4 +1,4 @@
-# Mirrors k8s/jenkins/09-rbac.yaml's grant, but in this namespace, so the
+# Mirrors gitops-repo/dev/k8s/jenkins/09-rbac.yaml's grant, but in this namespace, so the
 # Kubernetes-plugin Cloud (casc.yaml) can also provision the "kaniko" pod
 # template here — the subject is the controller's own ServiceAccount from
 # the jenkins namespace (cross-namespace subject reference), not a

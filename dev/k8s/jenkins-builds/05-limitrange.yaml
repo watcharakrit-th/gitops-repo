@@ -1,4 +1,4 @@
-# Slightly higher ceiling than k8s/jenkins/05-limitrange.yaml's (max cpu "1",
+# Slightly higher ceiling than gitops-repo/dev/k8s/jenkins/05-limitrange.yaml's (max cpu "1",
 # memory "2Gi") — image builds are heavier than the maven/test workload that
 # namespace caps for, and this is a separate namespace so raising it here
 # doesn't loosen anything for the controller or the maven build pods.

@@ -33,7 +33,7 @@ spec:
           image: postgres:17
           # POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB come straight
           # from the VSO-synced Secret — keys match the image's own env
-          # vars 1:1 (see vault/terraform/secrets.tf: postgres_sonar).
+          # vars 1:1 (see terraform/secrets.tf: postgres_sonar).
           envFrom:
             - secretRef:
                 name: postgres-db

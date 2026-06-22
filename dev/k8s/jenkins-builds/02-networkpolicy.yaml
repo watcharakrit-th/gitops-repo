@@ -58,7 +58,7 @@ spec:
           port: 80
 ---
 # Matches the namespaceSelector added to the jenkins namespace's
-# allow-jnlp-ingress rule (k8s/jenkins/02-networkpolicy.yaml) — that rule is
+# allow-jnlp-ingress rule (gitops-repo/dev/k8s/jenkins/02-networkpolicy.yaml) — that rule is
 # the ingress half on the controller side, this is the egress half here.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

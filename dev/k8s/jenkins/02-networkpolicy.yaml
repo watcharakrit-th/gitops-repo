@@ -4,7 +4,7 @@
 # from Maven Central, so blocking outbound internet here would break the
 # thing Jenkins actually exists to do. The ipBlock excludes the cluster's
 # own pod/service CIDRs so this doesn't double as a blanket allow-all for
-# in-cluster traffic. See k8s/vault-demo/02-networkpolicy.yaml for the CNI
+# in-cluster traffic. See gitops-repo/dev/k8s/vso/02-networkpolicy.yaml for the CNI
 # caveat (kindnet does not enforce NetworkPolicy on this lab cluster).
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -123,7 +123,7 @@ spec:
 # connection is dropped and agent Pods never come online. Two source peers:
 # the "maven" pod template's agents (same namespace) and the "kaniko" pod
 # template's agents, which live in jenkins-builds (see
-# k8s/jenkins-builds/02-networkpolicy.yaml's allow-jnlp-egress for the other
+# gitops-repo/dev/k8s/jenkins-builds/02-networkpolicy.yaml's allow-jnlp-egress for the other
 # half of this rule) because that namespace runs at baseline PSA, not
 # restricted.
 apiVersion: networking.k8s.io/v1

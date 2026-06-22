@@ -1,6 +1,6 @@
 # Default-deny everything in/out of postgres, then allow only: DNS, talking
 # to Vault, and accepting connections from the sonarqube namespace. See
-# k8s/vault-demo/02-networkpolicy.yaml for the CNI caveat (kindnet on this
+# gitops-repo/dev/k8s/vso/02-networkpolicy.yaml for the CNI caveat (kindnet on this
 # lab cluster does not enforce NetworkPolicy — these still document intent).
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

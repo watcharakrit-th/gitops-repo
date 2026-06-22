@@ -68,7 +68,7 @@ spec:
           image: sonarqube:community
           # SONAR_JDBC_URL / SONAR_JDBC_USERNAME / SONAR_JDBC_PASSWORD come
           # straight from the VSO-synced Secret (see
-          # vault/terraform/secrets.tf: sonarqube_db).
+          # terraform/secrets.tf: sonarqube_db).
           envFrom:
             - secretRef:
                 name: sonarqube-db

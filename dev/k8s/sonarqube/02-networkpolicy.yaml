@@ -2,7 +2,7 @@
 # egress to postgres, and ingress from jenkins. kubectl port-forward (used
 # to reach the SonarQube UI from the host — see README in this directory)
 # bypasses NetworkPolicy entirely, so no explicit "allow from host" rule is
-# needed for that. See k8s/vault-demo/02-networkpolicy.yaml for the CNI
+# needed for that. See gitops-repo/dev/k8s/vso/02-networkpolicy.yaml for the CNI
 # caveat (kindnet does not enforce NetworkPolicy on this lab cluster).
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
