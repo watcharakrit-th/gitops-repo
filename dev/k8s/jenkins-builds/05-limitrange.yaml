@@ -1,0 +1,24 @@
+# Slightly higher ceiling than k8s/jenkins/05-limitrange.yaml's (max cpu "1",
+# memory "2Gi") — image builds are heavier than the maven/test workload that
+# namespace caps for, and this is a separate namespace so raising it here
+# doesn't loosen anything for the controller or the maven build pods.
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: default-limits
+  namespace: jenkins-builds
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: "300m"
+        memory: "256Mi"
+      defaultRequest:
+        cpu: "100m"
+        memory: "128Mi"
+      max:
+        cpu: "2"
+        memory: "3Gi"
+      min:
+        cpu: "10m"
+        memory: "16Mi"

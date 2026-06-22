@@ -1,0 +1,17 @@
+# Separate from the jenkins namespace's "restricted" PSA on purpose: Kaniko
+# (jenkins/casc.yaml's "kaniko" pod template) needs to run as root inside its
+# own disposable build container to write into a base image's root-owned
+# directories during COPY/RUN — "restricted" forbids that outright, with no
+# per-container exception. baseline still blocks privileged containers,
+# hostPath/hostNetwork/host PID & IPC, and added Linux capabilities, so the
+# blast radius stays limited to "this container can act as root against its
+# own throwaway filesystem," not host access. The jenkins namespace (the
+# long-lived controller) stays at restricted.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jenkins-builds
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline

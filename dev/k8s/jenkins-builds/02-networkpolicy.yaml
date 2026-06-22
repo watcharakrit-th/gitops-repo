@@ -1,0 +1,82 @@
+# Default-deny, then allow: DNS, internet egress for pulling the kaniko
+# image / Dockerfile base images / pushing to Docker Hub, and the outbound
+# connection the auto-injected jnlp container makes back to the jenkins
+# controller's JNLP port to register as an agent (see jenkinsTunnel in
+# casc.yaml). No ingress rules at all — pipeline steps are dispatched over
+# that outbound jnlp channel, nothing ever connects into these pods.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: jenkins-builds
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-egress
+  namespace: jenkins-builds
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-internet-egress
+  namespace: jenkins-builds
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.244.0.0/16 # cluster pod CIDR
+              - 10.96.0.0/12 # cluster service CIDR
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+---
+# Matches the namespaceSelector added to the jenkins namespace's
+# allow-jnlp-ingress rule (k8s/jenkins/02-networkpolicy.yaml) — that rule is
+# the ingress half on the controller side, this is the egress half here.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-jnlp-egress
+  namespace: jenkins-builds
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: jenkins
+          podSelector:
+            matchLabels:
+              app: jenkins
+      ports:
+        - protocol: TCP
+          port: 50000
